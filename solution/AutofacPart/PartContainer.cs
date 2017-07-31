@@ -16,6 +16,7 @@ namespace blqw.Autofac
         static PartContainer() => Rebuild();
 
         static IContainer _container;
+
         public static void Rebuild()
         {
             var builder = new ContainerBuilder();
@@ -24,18 +25,68 @@ namespace blqw.Autofac
 
             foreach (var type in types)
             {
-                foreach (var register in Export.ByInterface(type))
+                if (Export.IsInstantiable(type))
                 {
-                    register.Register(builder);
+                    foreach (var register in Export.ByInterface(type))
+                    {
+                        register.Register(builder);
+                    }
+
+                    foreach (var register in Export.ByAttribute(type))
+                    {
+                        register.Register(builder);
+                    }
                 }
             }
 
             _container = builder.Build();
         }
 
-        public static void PropertiesAutowired(object instance)
+        public static void Fill(object instance)
         {
+            if (instance == null)
+            {
+                return;
+            }
+            TypeInfo type;
+            bool isStatic;
+            switch (instance)
+            {
+                case TypeInfo t:
+                    type = t;
+                    isStatic = true;
+                    instance = null;
+                    break;
+                case Type t:
+                    type = t.GetTypeInfo();
+                    isStatic = true;
+                    instance = null;
+                    break;
+                default:
+                    type = instance.GetType().GetTypeInfo();
+                    isStatic = false;
+                    break;
+            }
 
+            foreach (var p in type.GetRuntimeProperties())
+            {
+                if (!p.CanWrite || p.GetSetMethod()?.IsStatic != isStatic)
+                {
+                    continue;
+                }
+                var contract = Contract.Import(p);
+                if (!contract.Valid)
+                {
+                    continue;
+                }
+                var result = contract.Name == null
+                            ? _container.TryResolve(contract.Type, out var value)
+                            : _container.TryResolveNamed(contract.Name, contract.Type, out value);
+                if (result)
+                {
+                    p.SetValue(instance, value);
+                }
+            }
         }
     }
 }
