@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using blqw.Autofac;
 using System;
 using Autofac;
+using System.Composition;
 
 namespace CoreDemo
 {
@@ -45,7 +46,7 @@ namespace CoreDemo
         public object Call() => "MyClass";
     }
 
-    [InheritedExport]
+    //[InheritedExport]
     interface IInterfacePart
     {
         object Call();
