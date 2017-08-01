@@ -134,7 +134,16 @@ namespace blqw.Autofac
             }
             if (TryGetContractAttribute(field, "ImportMany", out contractName, out contractType))
             {
-                return new Contract(field, contractName, contractType ?? field.FieldType) { IsMany = true };
+                if (contractType == null)
+                {
+                    var enumerable = field.FieldType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                    if (enumerable == null)
+                    {
+                        return new Contract();
+                    }
+                    contractType = enumerable.GetGenericArguments()[0];
+                }
+                return new Contract(field, contractName, contractType) { IsMany = true };
             }
             return new Contract();
         }

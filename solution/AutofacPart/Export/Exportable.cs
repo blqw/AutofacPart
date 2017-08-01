@@ -7,9 +7,9 @@ using Autofac;
 namespace blqw.Autofac
 {
     /// <summary>
-    /// 导出零件
+    /// 可导出零件
     /// </summary>
-    internal sealed class Export : IExport
+    internal sealed class Exportable : IExportable
     {
         /// <summary>
         /// 注册零件委托
@@ -17,10 +17,10 @@ namespace blqw.Autofac
         private readonly Action<ContainerBuilder> _register;
 
         /// <summary>
-        /// 初始化导出零件
+        /// 初始化可导出零件
         /// </summary>
         /// <param name="register"></param>
-        public Export(Action<ContainerBuilder> register) => _register = register;
+        private Exportable(Action<ContainerBuilder> register) => _register = register;
 
         /// <summary>
         /// 注册零件
@@ -29,13 +29,16 @@ namespace blqw.Autofac
         
 
 #pragma warning disable IDE0011
-        public static IEnumerable<IExport> ByInterface(Type type)
+        /// <summary>
+        /// 根据类型的接口规则返回可导出零件
+        /// </summary>
+        public static IEnumerable<IExportable> ByInterface(Type type)
         {
             foreach (var @interface in type.GetInterfaces())
             {
                 if (@interface.Name.EndsWith("AutofacPart", StringComparison.Ordinal))
                 {
-                    yield return new Export(b => b.RegisterTypes(type).As(@interface));
+                    yield return new Exportable(b => b.RegisterTypes(type).As(@interface));
                 }
                 else foreach (var export in ByAttribute(@interface))
                 {
@@ -45,18 +48,21 @@ namespace blqw.Autofac
         }
 #pragma warning restore IDE0011
 
-        public static IEnumerable<IExport> ByAttribute(Type type)
+        /// <summary>
+        /// 根据特性规则返回可导出零件
+        /// </summary>
+        public static IEnumerable<IExportable> ByAttribute(Type type)
         {
             var contract = Contract.Export(type);
             if (contract.Valid)
             {
                 if (contract.Name != null)
                 {
-                    yield return new Export(b => b.RegisterTypes(type).Named(contract.Name, contract.Type));
+                    yield return new Exportable(b => b.RegisterTypes(type).Named(contract.Name, contract.Type));
                 }
                 else
                 {
-                    yield return new Export(b => b.RegisterTypes(type).As(contract.Type));
+                    yield return new Exportable(b => b.RegisterTypes(type).As(contract.Type));
                 }
             }
         }

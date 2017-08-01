@@ -7,9 +7,9 @@ using Autofac;
 namespace blqw.Autofac
 {
     /// <summary>
-    /// 导出零件接口
+    /// 可导出零件接口
     /// </summary>
-    internal interface IExport
+    internal interface IExportable
     {
         /// <summary>
         /// 注册导出的零件

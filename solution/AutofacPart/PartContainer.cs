@@ -15,6 +15,9 @@ namespace blqw.Autofac
     {
         static PartContainer() => Rebuild();
 
+        /// <summary>
+        /// autofac 容器
+        /// </summary>
         private static IContainer _container;
 
         /// <summary>
@@ -30,14 +33,14 @@ namespace blqw.Autofac
             {
                 if (Units.IsInstantiable(type))
                 {
-                    foreach (var register in Export.ByInterface(type))
+                    foreach (var export in Exportable.ByInterface(type))
                     {
-                        register.Register(builder);
+                        export.Register(builder);
                     }
 
-                    foreach (var register in Export.ByAttribute(type))
+                    foreach (var export in Exportable.ByAttribute(type))
                     {
-                        register.Register(builder);
+                        export.Register(builder);
                     }
                 }
             }
@@ -77,11 +80,11 @@ namespace blqw.Autofac
 
             foreach (var p in type.GetRuntimeProperties())
             {
-                if (!p.CanWrite || p.GetSetMethod()?.IsStatic != isStatic)
+                if (!p.CanWrite || p.GetSetMethod(true)?.IsStatic != isStatic)
                 {
                     continue;
                 }
-                var import = Import.ByProperty(p);
+                var import = Improtable.ByProperty(p);
                 if (import != null && import.TryResolve(_container, out var value))
                 {
                     p.SetValue(instance, value);
@@ -94,7 +97,7 @@ namespace blqw.Autofac
                 {
                     continue;
                 }
-                var import = Import.ByField(f);
+                var import = Improtable.ByField(f);
                 if (import != null && import.TryResolve(_container, out var value))
                 {
                     f.SetValue(instance, value);
