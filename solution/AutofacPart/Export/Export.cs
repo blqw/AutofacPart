@@ -6,21 +6,27 @@ using Autofac;
 
 namespace blqw.Autofac
 {
+    /// <summary>
+    /// 导出零件
+    /// </summary>
     internal sealed class Export : IExport
     {
-        private readonly Action<ContainerBuilder> _to;
+        /// <summary>
+        /// 注册零件委托
+        /// </summary>
+        private readonly Action<ContainerBuilder> _register;
 
-        public Export(Action<ContainerBuilder> to) => _to = to;
+        /// <summary>
+        /// 初始化导出零件
+        /// </summary>
+        /// <param name="register"></param>
+        public Export(Action<ContainerBuilder> register) => _register = register;
 
-        public static bool IsInstantiable(Type type)
-        {
-            if (type == null || type.IsAbstract || !type.IsClass)
-            {
-                return false;
-            }
-            return !type.IsGenericType || type.IsConstructedGenericType;
-        }
-
+        /// <summary>
+        /// 注册零件
+        /// </summary>
+        public void Register(ContainerBuilder builder) => _register(builder);
+        
 
 #pragma warning disable IDE0011
         public static IEnumerable<IExport> ByInterface(Type type)
@@ -55,6 +61,5 @@ namespace blqw.Autofac
             }
         }
 
-        public void Register(ContainerBuilder builder) => _to(builder);
     }
 }

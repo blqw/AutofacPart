@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using blqw.Autofac;
@@ -14,16 +15,18 @@ namespace CoreDemo
         {
             var my = new MyClass2();
             PartContainer.Fill(my);
-            Console.WriteLine(my.Part.Call());
+            PartContainer.Fill(my);
+            my.Call();
 
             //var builder = new ContainerBuilder();
 
-            //builder.RegisterType(typeof(MyClass)).As<IInterfacePart>().WithParameter("name", "xxx");
+            //builder.RegisterType(typeof(MyClass)).Named<IInterfacePart>("xxx");
+            //builder.RegisterType(typeof(MyClass3)).Named<IInterfacePart>("xxx");
 
             //var container = builder.Build();
 
-            //var my = container.Resolve<IInterfacePart>();
-            //Console.WriteLine(my);
+            //var my2 = container.ResolveNamed<IEnumerable<IInterfacePart>>("xxx");
+            //Console.WriteLine(my2);
 
         }
     }
@@ -31,17 +34,26 @@ namespace CoreDemo
 
     class MyClass2
     {
-        [Import]
-        public IInterfacePart Part { get; set; }
-    }
+        [ImportMany]
+        public IInterfacePart[] Part { get; set; }
 
-    class MyClass3
-    {
-
+        public void Call()
+        {
+            foreach (var p in Part)
+            {
+                Console.WriteLine(p.Call());
+            }
+        }
     }
 
     [Export(typeof(IInterfacePart))]
-    class MyClass : MyClass3, IInterfacePart
+    class MyClass3 : IInterfacePart
+    {
+        public object Call() => "MyClass3";
+    }
+
+    [Export(typeof(IInterfacePart))]
+    class MyClass : IInterfacePart
     {
         public object Call() => "MyClass";
     }

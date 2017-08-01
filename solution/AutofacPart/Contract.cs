@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Linq;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -19,6 +20,8 @@ namespace blqw.Autofac
             Name = string.IsNullOrWhiteSpace(contractName) ? null : contractName.Trim();
             Type = contractType;
             Valid = true;
+            IsMany = false;
+            IsMethod = false;
         }
 
         /// <summary>
@@ -57,7 +60,11 @@ namespace blqw.Autofac
         /// <param name="type"></param>
         public static Contract Export(Type type)
         {
-            if (type != null && TryGetContractAttribute(type, "Export", out var contractName, out var contractType))
+            if (type == null)
+            {
+                return new Contract();
+            }
+            if (TryGetContractAttribute(type, "Export", out var contractName, out var contractType))
             {
                 return new Contract(type, contractName, contractType ?? type);
             }
@@ -70,9 +77,13 @@ namespace blqw.Autofac
         /// <param name="method"></param>
         public static Contract Export(MethodInfo method)
         {
-            if (method != null && TryGetContractAttribute(method, "Export", out var contractName, out var contractType))
+            if (method == null)
             {
-                return new Contract(method, contractName, typeof(MethodInfo));
+                return new Contract();
+            }
+            if (TryGetContractAttribute(method, "Export", out var contractName, out var contractType))
+            {
+                return new Contract(method, contractName, typeof(MethodInfo)) { IsMethod = true };
             }
             return new Contract();
         }
@@ -83,9 +94,26 @@ namespace blqw.Autofac
         /// <param name="property"></param>
         public static Contract Import(PropertyInfo property)
         {
-            if (property != null && TryGetContractAttribute(property, "Import", out var contractName, out var contractType))
+            if (property == null)
+            {
+                return new Contract();
+            }
+            if (TryGetContractAttribute(property, "Import", out var contractName, out var contractType))
             {
                 return new Contract(property, contractName, contractType ?? property.PropertyType);
+            }
+            if (TryGetContractAttribute(property, "ImportMany", out contractName, out contractType))
+            {
+                if (contractType == null)
+                {
+                    var enumerable = property.PropertyType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                    if (enumerable == null)
+                    {
+                        return new Contract();
+                    }
+                    contractType = enumerable.GetGenericArguments()[0];
+                }
+                return new Contract(property, contractName, contractType) { IsMany = true };
             }
             return new Contract();
         }
@@ -96,9 +124,17 @@ namespace blqw.Autofac
         /// <param name="field"></param>
         public static Contract Import(FieldInfo field)
         {
-            if (field != null && TryGetContractAttribute(field, "Import", out var contractName, out var contractType))
+            if (field == null)
+            {
+                return new Contract();
+            }
+            if (TryGetContractAttribute(field, "Import", out var contractName, out var contractType))
             {
                 return new Contract(field, contractName, contractType ?? field.FieldType);
+            }
+            if (TryGetContractAttribute(field, "ImportMany", out contractName, out contractType))
+            {
+                return new Contract(field, contractName, contractType ?? field.FieldType) { IsMany = true };
             }
             return new Contract();
         }
@@ -126,6 +162,11 @@ namespace blqw.Autofac
         /// <summary>
         /// 契约是一个方法
         /// </summary>
-        public bool IsMethod => Member is MethodInfo;
+        public bool IsMethod { get; private set; }
+
+        /// <summary>
+        /// 导入插件集合
+        /// </summary>
+        public bool IsMany { get; private set; }
     }
 }
