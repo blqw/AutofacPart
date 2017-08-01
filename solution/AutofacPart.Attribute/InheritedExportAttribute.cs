@@ -4,22 +4,29 @@ using System.Text;
 
 namespace blqw.Autofac
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false, AllowMultiple = true)]
-    public sealed class InheritedExportAttribute : Attribute
+    /// <summary>
+    /// 可继承导出零件契约
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
+    public sealed class InheritedExportAttribute : ExportAttribute
     {
-        public InheritedExportAttribute()
-        {
-        }
-        public InheritedExportAttribute(string contractName) => ContractName = contractName?.Trim();
-        public InheritedExportAttribute(Type contractType) => ContractType = contractType;
-        public InheritedExportAttribute(string contractName, Type contractType)
-        {
-            ContractName = contractName?.Trim();
-            ContractType = contractType;
-        }
+        /// <summary>
+        /// 使用契约名称和推断类型来初始化可继承导出零件契约
+        /// </summary>
+        /// <param name="contractName">契约名称</param>
+        public InheritedExportAttribute(string contractName) : base(contractName) { }
 
-        public string ContractName { get; }
-        public Type ContractType { get; }
+        /// <summary>
+        /// 使用显式契约类型来初始化可继承导出零件契约
+        /// </summary>
+        /// <param name="contractType">显式契约类型</param>
+        public InheritedExportAttribute(Type contractType) : base(contractType) { }
 
+        /// <summary>
+        /// 使用契约名称和显式契约类型来初始化可继承导出零件契约
+        /// </summary>
+        /// <param name="contractName">契约名称</param>
+        /// <param name="contractType">显式契约类型</param>
+        public InheritedExportAttribute(string contractName, Type contractType) : base(contractName, contractType) { }
     }
 }
