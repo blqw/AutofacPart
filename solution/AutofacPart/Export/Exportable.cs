@@ -26,7 +26,7 @@ namespace blqw.Autofac
         /// 注册零件
         /// </summary>
         public void Register(ContainerBuilder builder) => _register(builder);
-        
+
 
 #pragma warning disable IDE0011
         /// <summary>
@@ -40,29 +40,69 @@ namespace blqw.Autofac
                 {
                     yield return new Exportable(b => b.RegisterTypes(type).As(@interface));
                 }
-                else foreach (var export in ByAttribute(@interface))
+                else
                 {
-                    yield return export;
+                    var contract = Contract.Export(@interface, false);
+                    if (contract.Valid)
+                    {
+                        if (contract.Name != null)
+                        {
+                            yield return new Exportable(b => b.RegisterTypes(type).Named(contract.Name, contract.Type ?? @interface));
+                        }
+                        else
+                        {
+                            yield return new Exportable(b => b.RegisterTypes(type).As(contract.Type ?? @interface));
+                        }
+                    }
                 }
             }
         }
+
 #pragma warning restore IDE0011
+
+        /// <summary>
+        /// 根据父类的特性返回可导出零件
+        /// </summary>
+        public static IEnumerable<IExportable> ByBaseType(Type type)
+        {
+            var realType = type;
+            while (true)
+            {
+                type = type?.BaseType;
+                if (type == typeof(object) || type == null)
+                {
+                    yield break;
+                }
+                var contract = Contract.Export(type, true);
+                if (contract.Valid)
+                {
+                    if (contract.Name != null)
+                    {
+                        yield return new Exportable(b => b.RegisterTypes(realType).Named(contract.Name, contract.Type ?? type));
+                    }
+                    else
+                    {
+                        yield return new Exportable(b => b.RegisterTypes(realType).As(contract.Type ?? type));
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 根据特性规则返回可导出零件
         /// </summary>
         public static IEnumerable<IExportable> ByAttribute(Type type)
         {
-            var contract = Contract.Export(type);
+            var contract = Contract.Export(type, false);
             if (contract.Valid)
             {
                 if (contract.Name != null)
                 {
-                    yield return new Exportable(b => b.RegisterTypes(type).Named(contract.Name, contract.Type));
+                    yield return new Exportable(b => b.RegisterTypes(type).Named(contract.Name, contract.Type ?? type));
                 }
                 else
                 {
-                    yield return new Exportable(b => b.RegisterTypes(type).As(contract.Type));
+                    yield return new Exportable(b => b.RegisterTypes(type).As(contract.Type ?? type));
                 }
             }
         }

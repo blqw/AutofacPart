@@ -1,3 +1,4 @@
+using System.Threading;
 using blqw.Autofac;
 using System;
 using System.Collections.Generic;
@@ -43,7 +44,7 @@ namespace CoreUnitTest
             var test3 = new TestClass3();
             PartContainer.Fill(test3);
             PartContainer.Fill(typeof(TestClass3));
-
+            
             foreach (var test in new[] { TestClass3.TestInterface, TestClass3.TestInterface2 , test3.TestInterface3, test3.TestInterface4 })
             {
                 Assert.NotNull(test);

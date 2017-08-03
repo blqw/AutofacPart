@@ -11,6 +11,12 @@ namespace blqw.Autofac
     public sealed class InheritedExportAttribute : ExportAttribute
     {
         /// <summary>
+        /// 使用推断类型来初始化可继承导出零件契约
+        /// </summary>
+        /// <param name="contractType">显式契约类型</param>
+        public InheritedExportAttribute() : base(null, null) { }
+
+        /// <summary>
         /// 使用契约名称和推断类型来初始化可继承导出零件契约
         /// </summary>
         /// <param name="contractName">契约名称</param>

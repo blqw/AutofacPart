@@ -42,6 +42,11 @@ namespace blqw.Autofac
                     {
                         export.Register(builder);
                     }
+                    
+                    foreach (var export in Exportable.ByBaseType(type))
+                    {
+                        export.Register(builder);
+                    }
                 }
             }
 

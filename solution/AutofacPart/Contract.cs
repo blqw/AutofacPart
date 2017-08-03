@@ -34,7 +34,7 @@ namespace blqw.Autofac
         /// <returns></returns>
         private static bool TryGetContractAttribute(MemberInfo member, string attributeName, out string name, out Type type)
         {
-            foreach (var attr in member.GetCustomAttributes())
+            foreach (var attr in member.GetCustomAttributes(false))
             {
                 var attrType = attr.GetType().GetTypeInfo();
                 if (string.Equals(attrType.Name, $"{attributeName}Attribute", StringComparison.Ordinal))
@@ -58,15 +58,22 @@ namespace blqw.Autofac
         /// 导出零件契约
         /// </summary>
         /// <param name="type"></param>
-        public static Contract Export(Type type)
+        public static Contract Export(Type type, bool inherit)
         {
             if (type == null)
             {
                 return new Contract();
             }
-            if (TryGetContractAttribute(type, "Export", out var contractName, out var contractType))
+            if (inherit)
             {
-                return new Contract(type, contractName, contractType ?? type);
+                if (TryGetContractAttribute(type, "InheritedExport", out var contractName, out var contractType))
+                {
+                    return new Contract(type, contractName, contractType);
+                }
+            }
+            else if (TryGetContractAttribute(type, "Export", out var contractName, out var contractType))
+            {
+                return new Contract(type, contractName, contractType);
             }
             return new Contract();
         }
@@ -136,7 +143,9 @@ namespace blqw.Autofac
             {
                 if (contractType == null)
                 {
-                    var enumerable = field.FieldType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                    var enumerable = field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                                    ? field.FieldType
+                                    : field.FieldType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
                     if (enumerable == null)
                     {
                         return new Contract();
