@@ -21,9 +21,10 @@ namespace blqw.Autofac
         private static IContainer _container;
 
         /// <summary>
-        /// 重新编译 (一般只有在动态加载程序集后才需要调用)
+        /// 重新编译
         /// </summary>
-        public static void Rebuild()
+        /// <remarks> 一般只有在动态加载程序集后才需要调用, 暂不公开 </remarks>
+        private static void Rebuild()
         {
             var builder = new ContainerBuilder();
 
@@ -42,10 +43,23 @@ namespace blqw.Autofac
                     {
                         export.Register(builder);
                     }
-                    
+
                     foreach (var export in Exportable.ByBaseType(type))
                     {
                         export.Register(builder);
+                    }
+                }
+                if (!type.IsInterface)
+                {
+                    foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                    {
+                        if (!method.IsAbstract)
+                        {
+                            foreach (var export in Exportable.Method(method))
+                            {
+                                export.Register(builder);
+                            }
+                        }
                     }
                 }
             }

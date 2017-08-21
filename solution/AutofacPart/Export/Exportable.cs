@@ -107,5 +107,16 @@ namespace blqw.Autofac
             }
         }
 
+        /// <summary>
+        /// 根据特性规则返回可导出零件
+        /// </summary>
+        public static IEnumerable<IExportable> Method(MethodInfo method)
+        {
+            var contract = Contract.Export(method);
+            if (contract.Valid)
+            {
+                yield return new Exportable(b => b.RegisterInstance(method).Named(contract.Name ?? method.Name, typeof(MethodInfo)));
+            }
+        }
     }
 }
