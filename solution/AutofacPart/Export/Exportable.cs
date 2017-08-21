@@ -38,7 +38,7 @@ namespace blqw.Autofac
             {
                 if (@interface.Name.EndsWith("AutofacPart", StringComparison.Ordinal))
                 {
-                    yield return new Exportable(b => b.RegisterTypes(type).As(@interface));
+                    yield return new Exportable(b => b.SmartRegisterTypes(type).As(@interface));
                 }
                 else
                 {
@@ -47,11 +47,11 @@ namespace blqw.Autofac
                     {
                         if (contract.Name != null)
                         {
-                            yield return new Exportable(b => b.RegisterTypes(type).Named(contract.Name, contract.Type ?? @interface));
+                            yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.Name, contract.Type ?? @interface));
                         }
                         else
                         {
-                            yield return new Exportable(b => b.RegisterTypes(type).As(contract.Type ?? @interface));
+                            yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.Type ?? @interface));
                         }
                     }
                 }
@@ -59,7 +59,7 @@ namespace blqw.Autofac
         }
 
 #pragma warning restore IDE0011
-
+        
         /// <summary>
         /// 根据父类的特性返回可导出零件
         /// </summary>
@@ -78,11 +78,11 @@ namespace blqw.Autofac
                 {
                     if (contract.Name != null)
                     {
-                        yield return new Exportable(b => b.RegisterTypes(realType).Named(contract.Name, contract.Type ?? type));
+                        yield return new Exportable(b => b.SmartRegisterTypes(realType).Named(contract.Name, contract.Type ?? type));
                     }
                     else
                     {
-                        yield return new Exportable(b => b.RegisterTypes(realType).As(contract.Type ?? type));
+                        yield return new Exportable(b => b.SmartRegisterTypes(realType).As(contract.Type ?? type));
                     }
                 }
             }
@@ -98,11 +98,11 @@ namespace blqw.Autofac
             {
                 if (contract.Name != null)
                 {
-                    yield return new Exportable(b => b.RegisterTypes(type).Named(contract.Name, contract.Type ?? type));
+                    yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.Name, contract.Type ?? type));
                 }
                 else
                 {
-                    yield return new Exportable(b => b.RegisterTypes(type).As(contract.Type ?? type));
+                    yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.Type ?? type));
                 }
             }
         }

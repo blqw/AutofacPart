@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Compile Remove="ImportManyTests.cs" />
+    <Compile Remove="ImportMethodTests.cs" />
     <Compile Remove="ImportTests.cs" />
     <Compile Remove="InheritedTests.cs" />
   </ItemGroup>

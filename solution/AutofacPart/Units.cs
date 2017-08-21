@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Autofac;
+using Autofac.Builder;
 
 namespace blqw.Autofac
 {
@@ -23,7 +25,7 @@ namespace blqw.Autofac
             {
                 return false;
             }
-            return !type.IsGenericType || type.IsConstructedGenericType;
+            return !type.IsGenericType || type.IsGenericTypeDefinition;
         }
 
         /// <summary>
@@ -94,6 +96,31 @@ namespace blqw.Autofac
             }
 
             throw new InvalidCastException($"不支持的集合类型:{collectionType.FullName}");
+        }
+
+        /// <summary>
+        /// 根据type的泛型属性选择合适的注册方法
+        /// </summary>
+        public static IRegistrationBuilder<object, ReflectionActivatorData, DynamicRegistrationStyle>  SmartRegisterTypes(this ContainerBuilder builder, Type type)
+        {
+            if (builder == null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            if (type == null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (type.IsGenericTypeDefinition)
+            {
+                return builder.RegisterGeneric(type);
+            }
+            else
+            {
+                return builder.RegisterTypes(type);
+            }
         }
     }
 }

@@ -143,5 +143,7 @@ namespace blqw.Autofac
         /// 获取零件
         /// </summary>
         public static object Get(string contractName, Type contractType) => _container.ResolveNamed(contractName, contractType);
+
+
     }
 }
