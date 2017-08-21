@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Autofac.Core.Activators.Reflection;
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -88,6 +89,7 @@ namespace blqw.Autofac
             return new Improtable(TypeToOne(contract.Type, returnType));
         }
 
+
         /// <summary>
         /// 根据契约名称和契约类型得到一个委托类型的零件
         /// </summary>
@@ -99,14 +101,25 @@ namespace blqw.Autofac
                 {
                     return true;
                 }
-                if (container.TryResolveNamed(contractName, typeof(MethodInfo), out value))
+                if (container.TryResolveNamed(contractName, typeof(MethodInfo), out value) && typeof(Delegate).IsAssignableFrom(contractType))
                 {
                     try
                     {
-                        value = ((MethodInfo)value).CreateDelegate(contractType);
+                        var method = ((MethodInfo)value);
+                        if (method.IsGenericMethodDefinition)
+                        {
+                            var part = new GenericMethodInfo(((MethodInfo)value));
+                            var target = new GenericMethodInfo(contractType);
+                            if (!part.Compatible(target) || !part.ResetGenericArgumentsWithTarget(target))
+                            {
+                                return false;
+                            }
+                            method = method.MakeGenericMethod(part.GenericArguments);
+                        }
+                        value = method.CreateDelegate(contractType);
                         return true;
                     }
-                    catch
+                    catch (Exception e)
                     {
                         return false;
                     }
@@ -141,7 +154,7 @@ namespace blqw.Autofac
                 return false;
             };
         }
-        
+
         /// <summary>
         /// 根据契约类型得到多个委托类型的零件
         /// </summary>

@@ -48,10 +48,14 @@ namespace CoreUnitTest
 
             [Export("GetT")]
             public static Type Get<T>() => typeof(T);
+
+
+            [Export("GetM")]
+            public static Type Get<M>(M m) => typeof(M);
         }
 
         delegate Type GetHandler<T>();
-        
+
         class TestClass4
         {
             [Import("GetT")]
@@ -59,6 +63,10 @@ namespace CoreUnitTest
 
             [Import("GetT")]
             public readonly GetHandler<int> Get2 = null;
+
+
+            [Import("GetM")]
+            public readonly Func<int, Type> Get3 = null;
         }
 
         [Fact]
@@ -67,11 +75,14 @@ namespace CoreUnitTest
             var test = new TestClass4();
             Assert.Null(test.Get1);
             Assert.Null(test.Get2);
+            Assert.Null(test.Get3);
             PartContainer.Fill(test);
             Assert.NotNull(test.Get1);
             Assert.NotNull(test.Get2);
+            Assert.NotNull(test.Get3);
             Assert.Equal(typeof(string), test.Get1());
             Assert.Equal(typeof(int), test.Get2());
+            Assert.Equal(typeof(int), test.Get3(1));
         }
     }
 }

@@ -122,5 +122,20 @@ namespace blqw.Autofac
                 return builder.RegisterTypes(type);
             }
         }
+
+        /// <summary>
+        /// 比较并替换相等的值
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="comparand"></param>
+        /// <param name="value"></param>
+        public static void CompareExchange(this Type[] array, Type comparand, Type value)
+        {
+            var j = Array.IndexOf(array, comparand);
+            if (j >= 0)
+            {
+                array[j] = value;
+            }
+        }
     }
 }
