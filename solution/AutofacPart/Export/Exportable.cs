@@ -45,13 +45,13 @@ namespace blqw.Autofac
                     var contract = Contract.Export(@interface, false);
                     if (contract.Valid)
                     {
-                        if (contract.Name != null)
+                        if (contract.ContractName != null)
                         {
-                            yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.Name, contract.Type ?? @interface));
+                            yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.ContractName, contract.ContractType ?? @interface));
                         }
                         else
                         {
-                            yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.Type ?? @interface));
+                            yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.ContractType ?? @interface));
                         }
                     }
                 }
@@ -76,13 +76,13 @@ namespace blqw.Autofac
                 var contract = Contract.Export(type, true);
                 if (contract.Valid)
                 {
-                    if (contract.Name != null)
+                    if (contract.ContractName != null)
                     {
-                        yield return new Exportable(b => b.SmartRegisterTypes(realType).Named(contract.Name, contract.Type ?? type));
+                        yield return new Exportable(b => b.SmartRegisterTypes(realType).Named(contract.ContractName, contract.ContractType ?? type));
                     }
                     else
                     {
-                        yield return new Exportable(b => b.SmartRegisterTypes(realType).As(contract.Type ?? type));
+                        yield return new Exportable(b => b.SmartRegisterTypes(realType).As(contract.ContractType ?? type));
                     }
                 }
             }
@@ -96,13 +96,13 @@ namespace blqw.Autofac
             var contract = Contract.Export(type, false);
             if (contract.Valid)
             {
-                if (contract.Name != null)
+                if (contract.ContractName != null)
                 {
-                    yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.Name, contract.Type ?? type));
+                    yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.ContractName, contract.ContractType ?? type));
                 }
                 else
                 {
-                    yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.Type ?? type));
+                    yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.ContractType ?? type));
                 }
             }
         }
@@ -115,7 +115,7 @@ namespace blqw.Autofac
             var contract = Contract.Export(method);
             if (contract.Valid)
             {
-                yield return new Exportable(b => b.RegisterInstance(method).Named(contract.Name ?? method.Name, typeof(MethodInfo)));
+                yield return new Exportable(b => b.RegisterInstance(method).Named(contract.ContractName ?? method.Name, typeof(MethodInfo)));
             }
         }
     }

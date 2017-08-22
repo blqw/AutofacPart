@@ -144,6 +144,77 @@ namespace blqw.Autofac
         /// </summary>
         public static object Get(string contractName, Type contractType) => _container.ResolveNamed(contractName, contractType);
 
+        //public static object CreateInstance(Type type)
+        //{
+        //    if (type == null)
+        //    {
+        //        throw new ArgumentNullException(nameof(type));
+        //    }
+        //    var ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic);
+        //    if (ctors.Length == 0)
+        //    {
+        //        throw new InvalidOperationException("没有可用的构造函数");
+        //    }
+        //    ConstructorInfo ctor = null;
+        //    ParameterInfo[] param = null;
+        //    for (var i = 0; i < ctors.Length; i++)
+        //    {
+        //        if (param == null || param.Length == 0)
+        //        {
+        //            ctor = ctors[i];
+        //            param = ctor.GetParameters();
+        //        }
+        //        else if (ctors[i].GetParameters().Length > 0)
+        //        {
+        //            throw new InvalidOperationException("可用的构造函数过多");
+        //        }
+        //    }
+        //    if (param.Length == 0)
+        //    {
+        //        var instance = ctor.Invoke(Array.Empty<object>());
+        //        Fill(instance);
+        //        return instance;
+        //    }
+        //    return CreateInstance(ctor);
+        //}
 
+        //public static object CreateInstance(ConstructorInfo ctor)
+        //{
+        //    if (ctor == null)
+        //    {
+        //        throw new ArgumentNullException(nameof(ctor));
+        //    }
+
+        //    var param = ctor.GetParameters();
+        //    if (param.Length == 0)
+        //    {
+        //        var instance = ctor.Invoke(Array.Empty<object>());
+        //        Fill(instance);
+        //        return instance;
+        //    }
+        //}
+
+        //public static object[] GetArguments(ParameterInfo[] parameters, Func<ParameterInfo, object> defaultFactory = null)
+        //{
+        //    if (parameters == null)
+        //    {
+        //        throw new ArgumentNullException(nameof(parameters));
+        //    }
+        //    var length = parameters.Length;
+        //    if (length == 0)
+        //    {
+        //        return Array.Empty<object>();
+        //    }
+        //    var args = new object[length];
+        //    for (var i = 0; i < length; i++)
+        //    {
+        //        if (true)
+        //        {
+
+        //        }
+        //    }
+
+
+        //}
     }
 }

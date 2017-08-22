@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using System.Collections;
 
 namespace blqw.Autofac
 {
@@ -14,27 +15,31 @@ namespace blqw.Autofac
         /// <summary>
         /// 私有构造函数
         /// </summary>
-        private Contract(MemberInfo member, string contractName, Type contractType)
+        private Contract(string contractName, Type contractType, MemberInfo part, string partName, Type partType)
         {
-            Member = member;
-            Name = string.IsNullOrWhiteSpace(contractName) ? null : contractName.Trim();
-            Type = contractType;
+            Part = part;
+            ContractName = string.IsNullOrWhiteSpace(contractName) ? null : contractName.Trim();
+            ContractType = contractType;
+            PartName = partName;
+            PartType = partType;
+            ActualType = partType;
             Valid = true;
             IsMany = false;
             IsMethod = false;
+            HasAttribute = true;
         }
 
         /// <summary>
         /// 尝试获取契约特性
         /// </summary>
-        /// <param name="member">需要获取特性的成员</param>
+        /// <param name="part">需要获取特性的成员</param>
         /// <param name="attributeName">特性的类名, 不包含 "Attribute" </param>
         /// <param name="name">契约名称</param>
         /// <param name="type">契约类型</param>
         /// <returns></returns>
-        private static bool TryGetContractAttribute(MemberInfo member, string attributeName, out string name, out Type type)
+        private static bool TryGetContractAttribute(ICustomAttributeProvider part, string attributeName, out string name, out Type type)
         {
-            foreach (var attr in member.GetCustomAttributes(false))
+            foreach (var attr in part.GetCustomAttributes(false))
             {
                 var attrType = attr.GetType().GetTypeInfo();
                 if (string.Equals(attrType.Name, $"{attributeName}Attribute", StringComparison.Ordinal))
@@ -53,6 +58,7 @@ namespace blqw.Autofac
             type = null;
             return false;
         }
+        
 
         /// <summary>
         /// 导出零件契约
@@ -68,12 +74,12 @@ namespace blqw.Autofac
             {
                 if (TryGetContractAttribute(type, "InheritedExport", out var contractName, out var contractType))
                 {
-                    return new Contract(type, contractName, contractType);
+                    return new Contract(contractName, contractType, type, type.Name, type);
                 }
             }
             else if (TryGetContractAttribute(type, "Export", out var contractName, out var contractType))
             {
-                return new Contract(type, contractName, contractType);
+                return new Contract(contractName, contractType, type, type.Name, type);
             }
             return new Contract();
         }
@@ -90,7 +96,35 @@ namespace blqw.Autofac
             }
             if (TryGetContractAttribute(method, "Export", out var contractName, out var contractType))
             {
-                return new Contract(method, contractName, typeof(MethodInfo)) { IsMethod = true };
+                return new Contract(contractName, typeof(MethodInfo), method, method.Name, typeof(MethodInfo)) { IsMethod = true };
+            }
+            return new Contract();
+        }
+
+        private static Contract Import(MemberInfo propertyOrField, Type type)
+        {
+            if (propertyOrField == null)
+            {
+                return new Contract();
+            }
+            //尝试从 ImportAttribute 中获取契约
+            if (TryGetContractAttribute(propertyOrField, "Import", out var contractName, out var contractType))
+            {
+                return new Contract(contractName, contractType, propertyOrField, propertyOrField.Name, type);
+            }
+            //尝试从 ImportMany 中获取集合契约, 并且属性必须是 IEnumerable 的实现
+            if (TryGetContractAttribute(propertyOrField, "ImportMany", out contractName, out contractType) && typeof(IEnumerable).IsAssignableFrom(type))
+            {
+                //获取属性的集合泛型
+                var enumerable = type.IsInterface && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                                ? type
+                                : type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                //如果不是实现泛型接口 IEnumerable<T> 则零件类型为 object
+                return new Contract(contractName, contractType, propertyOrField, propertyOrField.Name, enumerable?.GetGenericArguments()[0] ?? typeof(object))
+                {
+                    IsMany = true,
+                    ActualType = type
+                };
             }
             return new Contract();
         }
@@ -99,60 +133,44 @@ namespace blqw.Autofac
         /// 导入零件契约
         /// </summary>
         /// <param name="property"></param>
-        public static Contract Import(PropertyInfo property)
-        {
-            if (property == null)
-            {
-                return new Contract();
-            }
-            if (TryGetContractAttribute(property, "Import", out var contractName, out var contractType))
-            {
-                return new Contract(property, contractName, contractType ?? property.PropertyType);
-            }
-            if (TryGetContractAttribute(property, "ImportMany", out contractName, out contractType))
-            {
-                if (contractType == null)
-                {
-                    var enumerable = property.PropertyType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-                    if (enumerable == null)
-                    {
-                        return new Contract();
-                    }
-                    contractType = enumerable.GetGenericArguments()[0];
-                }
-                return new Contract(property, contractName, contractType) { IsMany = true };
-            }
-            return new Contract();
-        }
+        public static Contract Import(PropertyInfo property) => Import(property, property?.PropertyType);
 
         /// <summary>
         /// 导入零件契约
         /// </summary>
         /// <param name="field"></param>
-        public static Contract Import(FieldInfo field)
+        public static Contract Import(FieldInfo field) => Import(field, field?.FieldType);
+
+        /// <summary>
+        /// 获取参数的契约
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
+        public static Contract Import(ParameterInfo parameter)
         {
-            if (field == null)
+            if (parameter == null)
             {
                 return new Contract();
             }
-            if (TryGetContractAttribute(field, "Import", out var contractName, out var contractType))
+            var type = parameter.ParameterType;
+            //尝试从 ImportAttribute 中获取契约
+            if (TryGetContractAttribute(parameter, "Import", out var contractName, out var contractType))
             {
-                return new Contract(field, contractName, contractType ?? field.FieldType);
+                return new Contract(contractName, contractType, parameter.Member, parameter.Name, type);
             }
-            if (TryGetContractAttribute(field, "ImportMany", out contractName, out contractType))
+            //尝试从 ImportMany 中获取集合契约, 并且属性必须是 IEnumerable 的实现
+            if (TryGetContractAttribute(parameter, "ImportMany", out contractName, out contractType) && typeof(IEnumerable).IsAssignableFrom(type))
             {
-                if (contractType == null)
+                //获取属性的集合泛型
+                var enumerable = type.IsInterface && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                                ? type
+                                : type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                //如果不是实现泛型接口 IEnumerable<T> 则零件类型为 object
+                return new Contract(contractName, contractType, parameter.Member, parameter.Name, enumerable?.GetGenericArguments()[0] ?? typeof(object))
                 {
-                    var enumerable = field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
-                                    ? field.FieldType
-                                    : field.FieldType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-                    if (enumerable == null)
-                    {
-                        return new Contract();
-                    }
-                    contractType = enumerable.GetGenericArguments()[0];
-                }
-                return new Contract(field, contractName, contractType) { IsMany = true };
+                    IsMany = true,
+                    ActualType = type
+                };
             }
             return new Contract();
         }
@@ -165,26 +183,43 @@ namespace blqw.Autofac
         /// <summary>
         /// 契约名称
         /// </summary>
-        public string Name { get; }
+        public string ContractName { get; }
 
         /// <summary>
         /// 契约类型
         /// </summary>
-        public Type Type { get; }
+        public Type ContractType { get; }
 
         /// <summary>
-        /// 契约成员
+        /// 契约零件
         /// </summary>
-        public MemberInfo Member { get; }
+        public MemberInfo Part { get; }
 
         /// <summary>
-        /// 契约是一个方法
+        /// 零件名称
+        /// </summary>
+        public string PartName { get; }
+
+        /// <summary>
+        /// 零件类型
+        /// </summary>
+        public Type PartType { get; }
+
+        /// <summary>
+        /// 实际类型
+        /// </summary>
+        public Type ActualType { get; private set; }
+
+        /// <summary>
+        /// 方法零件
         /// </summary>
         public bool IsMethod { get; private set; }
 
         /// <summary>
-        /// 导入插件集合
+        /// 集合契约
         /// </summary>
         public bool IsMany { get; private set; }
+
+        public bool HasAttribute { get; }
     }
 }

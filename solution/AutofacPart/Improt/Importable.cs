@@ -41,52 +41,59 @@ namespace blqw.Autofac
         /// 根据属性特性返回导入零件操作
         /// </summary>
         public static IImprotable ByProperty(PropertyInfo property)
-            => ByContract(Contract.Import(property), property.PropertyType);
+            => ByContract(Contract.Import(property));
 
         /// <summary>
         /// 根据字段特性返回导入零件操作
         /// </summary>
         public static IImprotable ByField(FieldInfo field)
-            => ByContract(Contract.Import(field), field.FieldType);
+            => ByContract(Contract.Import(field));
+
+        /// <summary>
+        /// 根据属性特性返回导入零件操作
+        /// </summary>
+        public static IImprotable ByProperty(ParameterInfo parameter)
+            => ByContract(Contract.Import(parameter));
 
         /// <summary>
         /// 根据契约和实际类型返回导入零件操作
         /// </summary>
-        private static IImprotable ByContract(Contract contract, Type returnType)
+        private static IImprotable ByContract(Contract contract)
         {
             if (!contract.Valid)
             {
                 return null;
             }
-            if (typeof(Delegate).IsAssignableFrom(contract.Type)) //委托
+            var returnType = contract.ActualType;
+            if (typeof(Delegate).IsAssignableFrom(contract.ContractType)) //委托
             {
                 if (contract.IsMany)
                 {
-                    if (contract.Name != null)
+                    if (contract.ContractName != null)
                     {
-                        return new Improtable(NamedDelegateToMany(contract.Name, contract.Type, returnType));
+                        return new Improtable(NamedDelegateToMany(contract.ContractName, contract.ContractType, returnType));
                     }
-                    return new Improtable(DelegateToMany(contract.Member.Name, contract.Type, returnType));
+                    return new Improtable(DelegateToMany(contract.Part.Name, contract.ContractType, returnType));
                 }
-                if (contract.Name != null)
+                if (contract.ContractName != null)
                 {
-                    return new Improtable(NamedDelegateToOne(contract.Name, contract.Type, returnType));
+                    return new Improtable(NamedDelegateToOne(contract.ContractName, contract.ContractType, returnType));
                 }
-                return new Improtable(DelegateToOne(contract.Member.Name, contract.Type, returnType));
+                return new Improtable(DelegateToOne(contract.Part.Name, contract.ContractType, returnType));
             }
             if (contract.IsMany)
             {
-                if (contract.Name != null)
+                if (contract.ContractName != null)
                 {
-                    return new Improtable(NamedTypeToMany(contract.Name, contract.Type, returnType));
+                    return new Improtable(NamedTypeToMany(contract.ContractName, contract.ContractType, returnType));
                 }
-                return new Improtable(TypeToMany(contract.Type, returnType));
+                return new Improtable(TypeToMany(contract.ContractType, returnType));
             }
-            if (contract.Name != null)
+            if (contract.ContractName != null)
             {
-                return new Improtable(NamedTypeToOne(contract.Name, contract.Type, returnType));
+                return new Improtable(NamedTypeToOne(contract.ContractName, contract.ContractType, returnType));
             }
-            return new Improtable(TypeToOne(contract.Type, returnType));
+            return new Improtable(TypeToOne(contract.ContractType, returnType));
         }
 
 
