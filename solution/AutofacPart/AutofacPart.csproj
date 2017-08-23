@@ -4,12 +4,12 @@
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <AssemblyName>blqw.AutofacPart</AssemblyName>
     <RootNamespace>blqw.Autofac</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Authors>blqw</Authors>
     <Company>blqw</Company>
-    <Description />
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <Description>AutofacPart</Description>
+    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <FileVersion>1.0.2.0</FileVersion>
   </PropertyGroup>
   
   <ItemGroup>
