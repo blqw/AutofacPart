@@ -15,7 +15,7 @@ namespace blqw.Autofac
         /// <summary>
         /// 私有构造函数
         /// </summary>
-        private Contract(string contractName, Type contractType, MemberInfo part, string partName, Type partType)
+        private Contract(string contractName, Type contractType, object part, string partName, Type partType, ResolveMetadata meta)
         {
             Part = part;
             ContractName = string.IsNullOrWhiteSpace(contractName) ? null : contractName.Trim();
@@ -27,7 +27,10 @@ namespace blqw.Autofac
             IsMany = false;
             IsMethod = false;
             HasAttribute = true;
+            Metadata = meta;
         }
+
+        public ResolveMetadata Metadata { get; }
 
         /// <summary>
         /// 尝试获取契约特性
@@ -46,7 +49,7 @@ namespace blqw.Autofac
                 {
                     var p1 = attrType.GetProperty("ContractName", typeof(string));
                     var p2 = attrType.GetProperty("ContractType", typeof(Type));
-                    if (p1 != null)
+                    if (p1 != null && p1.PropertyType == typeof(string))
                     {
                         name = (string)p1.GetValue(attr);
                         type = (Type)p2?.GetValue(attr);
@@ -58,28 +61,28 @@ namespace blqw.Autofac
             type = null;
             return false;
         }
-        
+
 
         /// <summary>
         /// 导出零件契约
         /// </summary>
-        /// <param name="type"></param>
-        public static Contract Export(Type type, bool inherit)
+        /// <param name="attributeProvider"></param>
+        public static Contract Export(Type part, ICustomAttributeProvider attributeProvider, bool inherit)
         {
-            if (type == null)
+            if (attributeProvider == null)
             {
                 return new Contract();
             }
             if (inherit)
             {
-                if (TryGetContractAttribute(type, "InheritedExport", out var contractName, out var contractType))
+                if (TryGetContractAttribute(attributeProvider, "InheritedExport", out var contractName, out var contractType))
                 {
-                    return new Contract(contractName, contractType, type, type.Name, type);
+                    return new Contract(contractName, contractType, part, part.Name, part, new ResolveMetadata(attributeProvider, part));
                 }
             }
-            else if (TryGetContractAttribute(type, "Export", out var contractName, out var contractType))
+            else if (TryGetContractAttribute(attributeProvider, "Export", out var contractName, out var contractType))
             {
-                return new Contract(contractName, contractType, type, type.Name, type);
+                return new Contract(contractName, contractType, part, part.Name, part, new ResolveMetadata(attributeProvider, part));
             }
             return new Contract();
         }
@@ -87,16 +90,16 @@ namespace blqw.Autofac
         /// <summary>
         /// 导出零件契约
         /// </summary>
-        /// <param name="method"></param>
-        public static Contract Export(MethodInfo method)
+        /// <param name="part"></param>
+        public static Contract Export(MethodInfo part)
         {
-            if (method == null)
+            if (part == null)
             {
                 return new Contract();
             }
-            if (TryGetContractAttribute(method, "Export", out var contractName, out var contractType))
+            if (TryGetContractAttribute(part, "Export", out var contractName, out var contractType))
             {
-                return new Contract(contractName, typeof(MethodInfo), method, method.Name, typeof(MethodInfo)) { IsMethod = true };
+                return new Contract(contractName, typeof(MethodInfo), part, part.Name, typeof(MethodInfo), new ResolveMetadata(part)) { IsMethod = true };
             }
             return new Contract();
         }
@@ -110,7 +113,7 @@ namespace blqw.Autofac
             //尝试从 ImportAttribute 中获取契约
             if (TryGetContractAttribute(propertyOrField, "Import", out var contractName, out var contractType))
             {
-                return new Contract(contractName, contractType, propertyOrField, propertyOrField.Name, type);
+                return new Contract(contractName, contractType, propertyOrField, propertyOrField.Name, type, new ResolveMetadata(propertyOrField));
             }
             //尝试从 ImportMany 中获取集合契约, 并且属性必须是 IEnumerable 的实现
             if (TryGetContractAttribute(propertyOrField, "ImportMany", out contractName, out contractType) && typeof(IEnumerable).IsAssignableFrom(type))
@@ -120,7 +123,7 @@ namespace blqw.Autofac
                                 ? type
                                 : type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
                 //如果不是实现泛型接口 IEnumerable<T> 则零件类型为 object
-                return new Contract(contractName, contractType, propertyOrField, propertyOrField.Name, enumerable?.GetGenericArguments()[0] ?? typeof(object))
+                return new Contract(contractName, contractType, propertyOrField, propertyOrField.Name, enumerable?.GetGenericArguments()[0] ?? typeof(object), new ResolveMetadata(propertyOrField))
                 {
                     IsMany = true,
                     ActualType = type
@@ -156,7 +159,7 @@ namespace blqw.Autofac
             //尝试从 ImportAttribute 中获取契约
             if (TryGetContractAttribute(parameter, "Import", out var contractName, out var contractType))
             {
-                return new Contract(contractName, contractType, parameter.Member, parameter.Name, type);
+                return new Contract(contractName, contractType, parameter, parameter.Name, type, new ResolveMetadata(parameter));
             }
             //尝试从 ImportMany 中获取集合契约, 并且属性必须是 IEnumerable 的实现
             if (TryGetContractAttribute(parameter, "ImportMany", out contractName, out contractType) && typeof(IEnumerable).IsAssignableFrom(type))
@@ -166,7 +169,7 @@ namespace blqw.Autofac
                                 ? type
                                 : type.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
                 //如果不是实现泛型接口 IEnumerable<T> 则零件类型为 object
-                return new Contract(contractName, contractType, parameter.Member, parameter.Name, enumerable?.GetGenericArguments()[0] ?? typeof(object))
+                return new Contract(contractName, contractType, parameter, parameter.Name, enumerable?.GetGenericArguments()[0] ?? typeof(object), new ResolveMetadata(parameter))
                 {
                     IsMany = true,
                     ActualType = type
@@ -193,7 +196,7 @@ namespace blqw.Autofac
         /// <summary>
         /// 契约零件
         /// </summary>
-        public MemberInfo Part { get; }
+        public object Part { get; }
 
         /// <summary>
         /// 零件名称

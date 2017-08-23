@@ -1,4 +1,5 @@
-﻿using Autofac.Core.Activators.Reflection;
+﻿
+using Autofac.Core.Activators.Reflection;
 using System.Linq;
 using System;
 using System.Collections.Generic;
@@ -64,6 +65,7 @@ namespace blqw.Autofac
             {
                 return null;
             }
+            return new ContractImportable(contract);
             var returnType = contract.ActualType;
             if (typeof(Delegate).IsAssignableFrom(contract.ContractType)) //委托
             {
@@ -73,13 +75,13 @@ namespace blqw.Autofac
                     {
                         return new Improtable(NamedDelegateToMany(contract.ContractName, contract.ContractType, returnType));
                     }
-                    return new Improtable(DelegateToMany(contract.Part.Name, contract.ContractType, returnType));
+                    return new Improtable(DelegateToMany(contract.PartName, contract.ContractType, returnType));
                 }
                 if (contract.ContractName != null)
                 {
                     return new Improtable(NamedDelegateToOne(contract.ContractName, contract.ContractType, returnType));
                 }
-                return new Improtable(DelegateToOne(contract.Part.Name, contract.ContractType, returnType));
+                return new Improtable(DelegateToOne(contract.PartName, contract.ContractType, returnType));
             }
             if (contract.IsMany)
             {

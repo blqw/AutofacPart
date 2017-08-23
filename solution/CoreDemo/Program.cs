@@ -22,15 +22,20 @@ namespace CoreDemo
         {
             var builder = new ContainerBuilder();
             builder.RegisterType(typeof(MyClass<>));
-            builder.RegisterInstance(new TraceSource("default")).As<TraceSource>();
+            builder.RegisterInstance(new TraceSource("default")).As<TraceSource>().WithMetadata(new ResolveMetadata("x", 1, 2));
             var container = builder.Build();
 
+            var x = container.Resolve<IEnumerable<Lazy<TraceSource, ResolveMetadata>>>();
+            Console.WriteLine(x.FirstOrDefault().Value);
+            Console.WriteLine(x);
 
-            var x = container.Resolve<MyClass<string>>();
-            
-            Console.WriteLine(x.Data);
         }
-        
+
+        class MyClass2
+        {
+            public string name { get; set; }
+
+        }
 
         class MyClass<T>
         {
@@ -43,6 +48,7 @@ namespace CoreDemo
 
             public TraceSource Logger { get; }
         }
+
 
     }
 

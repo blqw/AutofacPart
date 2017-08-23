@@ -60,10 +60,9 @@ namespace CoreUnitTest
             var test3 = new TestClass4();
             PartContainer.Fill(test3);
             PartContainer.Fill(typeof(TestClass4));
-
-            Assert.Equal(0, TestClass4.TestProp5.Count);
-            Assert.False(test3.TestProp6.Any());
-            foreach (var test in new [] { TestClass4.TestProp, TestClass4.TestProp2, test3.TestProp3, test3.TestProp4 })
+            Assert.Null(TestClass4.TestProp5);
+            Assert.Null(test3.TestProp6);
+            foreach (var test in new[] { TestClass4.TestProp, TestClass4.TestProp2, test3.TestProp3, test3.TestProp4 })
             {
                 Assert.NotNull(test);
                 Assert.Equal(2, test.Count());

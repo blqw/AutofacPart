@@ -42,16 +42,16 @@ namespace blqw.Autofac
                 }
                 else
                 {
-                    var contract = Contract.Export(@interface, false);
+                    var contract = Contract.Export(type, @interface, false);
                     if (contract.Valid)
                     {
                         if (contract.ContractName != null)
                         {
-                            yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.ContractName, contract.ContractType ?? @interface));
+                            yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.ContractName, contract.ContractType ?? @interface).WithMetadata(contract.Metadata));
                         }
                         else
                         {
-                            yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.ContractType ?? @interface));
+                            yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.ContractType ?? @interface).WithMetadata(contract.Metadata));
                         }
                     }
                 }
@@ -59,7 +59,7 @@ namespace blqw.Autofac
         }
 
 #pragma warning restore IDE0011
-        
+
         /// <summary>
         /// 根据父类的特性返回可导出零件
         /// </summary>
@@ -73,16 +73,16 @@ namespace blqw.Autofac
                 {
                     yield break;
                 }
-                var contract = Contract.Export(type, true);
+                var contract = Contract.Export(realType, type, true);
                 if (contract.Valid)
                 {
                     if (contract.ContractName != null)
                     {
-                        yield return new Exportable(b => b.SmartRegisterTypes(realType).Named(contract.ContractName, contract.ContractType ?? type));
+                        yield return new Exportable(b => b.SmartRegisterTypes(realType).Named(contract.ContractName, contract.ContractType ?? type).WithMetadata(contract.Metadata));
                     }
                     else
                     {
-                        yield return new Exportable(b => b.SmartRegisterTypes(realType).As(contract.ContractType ?? type));
+                        yield return new Exportable(b => b.SmartRegisterTypes(realType).As(contract.ContractType ?? type).WithMetadata(contract.Metadata));
                     }
                 }
             }
@@ -93,16 +93,16 @@ namespace blqw.Autofac
         /// </summary>
         public static IEnumerable<IExportable> ByAttribute(Type type)
         {
-            var contract = Contract.Export(type, false);
+            var contract = Contract.Export(type, type, false);
             if (contract.Valid)
             {
                 if (contract.ContractName != null)
                 {
-                    yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.ContractName, contract.ContractType ?? type));
+                    yield return new Exportable(b => b.SmartRegisterTypes(type).Named(contract.ContractName, contract.ContractType ?? type).WithMetadata(contract.Metadata));
                 }
                 else
                 {
-                    yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.ContractType ?? type));
+                    yield return new Exportable(b => b.SmartRegisterTypes(type).As(contract.ContractType ?? type).WithMetadata(contract.Metadata));
                 }
             }
         }
@@ -115,7 +115,7 @@ namespace blqw.Autofac
             var contract = Contract.Export(method);
             if (contract.Valid)
             {
-                yield return new Exportable(b => b.RegisterInstance(method).Named(contract.ContractName ?? method.Name, typeof(MethodInfo)));
+                yield return new Exportable(b => b.RegisterInstance(method).Named(contract.ContractName ?? method.Name, typeof(MethodInfo)).WithMetadata(contract.Metadata));
             }
         }
     }

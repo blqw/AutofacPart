@@ -78,12 +78,10 @@ namespace blqw.Autofac
                 var elementType = collection.GetGenericArguments()[0];
                 if (eleType.IsAssignableFrom(elementType))
                 {
-                    if (collectionType.IsInterface)
-                    {
-                        return Activator.CreateInstance(collectionType, typeof(List<>).MakeGenericType(elementType));
-                    }
-                    var list = Activator.CreateInstance(collectionType);
-                    var add = collectionType.GetMethod("Add");
+                    var list = collectionType.IsInterface
+                                ? Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))
+                                : Activator.CreateInstance(collectionType);
+                    var add = collection.GetMethod("Add");
                     var args = new object[1];
                     foreach (var item in enumerable)
                     {
