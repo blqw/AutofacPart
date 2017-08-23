@@ -20,9 +20,8 @@ namespace blqw.Autofac
 
     class ResolveHelper<T> : IResolveHelper
     {
-        protected virtual object Convert(T value) => value;
         protected virtual Type Type => typeof(T);
-        public bool TryResolve(IContainer container, Contract contract, out object part)
+        public virtual bool TryResolve(IContainer container, Contract contract, out object part)
         {
             var value = contract.ContractName != null
                         ? container.ResolveOptionalNamed<IEnumerable<Lazy<T, ResolveMetadata>>>(contract.ContractName)
@@ -35,26 +34,23 @@ namespace blqw.Autofac
             }
             if (contract.IsMany)
             {
-                var list = value?.GroupBy(x => x.Metadata.PartName)
-                            .Select(y => y.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value)
-                            .ToList();
-                if (list == null || list.Count == 0)
-                {
-                    part = null;
-                    return false;
-                }
                 try
                 {
-                    part = Units.ConvertToCollection(list.Select(Convert), contract.PartType, contract.ActualType);
+                    var list = value?.GroupBy(x => x.Metadata.PartName).Select(y => y.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value);
+                    part = Units.ConvertToCollection(list, contract.PartType, contract.ActualType);
                     return true;
                 }
-                catch(Exception e)
+
+                catch
                 {
+#if DEBUG
+                    throw;
+#endif
                     part = null;
                     return false;
                 }
             }
-            part = Convert(value.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value);
+            part = value.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value;
             return true;
         }
     }
@@ -64,13 +60,39 @@ namespace blqw.Autofac
         public Type DelegateType { get; }
         protected override Type Type => DelegateType;
 
-        protected override object Convert(MethodInfo value) => CreateDelegate(value, DelegateType);
+        public ResolveMethodHelper(Type delegateType) => DelegateType = delegateType;
 
-        public ResolveMethodHelper(Type delegateType)
+        public override bool TryResolve(IContainer container, Contract contract, out object part)
         {
-            DelegateType = delegateType;
-        }
+            var value = container.ResolveOptionalNamed<IEnumerable<Lazy<MethodInfo, ResolveMetadata>>>(contract.ContractName ?? contract.PartName);
 
+            if (value == null || value.Any() == false)
+            {
+                part = null;
+                return false;
+            }
+            if (contract.IsMany)
+            {
+
+                try
+                {
+                    var list = value?.GroupBy(x => x.Metadata.PartName).Select(y => CreateDelegate(y.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value, DelegateType));
+                    part = Units.ConvertToCollection(list, contract.PartType, contract.ActualType);
+                    return true;
+                }
+
+                catch
+                {
+#if DEBUG
+                    throw;
+#endif
+                    part = null;
+                    return false;
+                }
+            }
+            part = CreateDelegate(value.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value, DelegateType);
+            return true;
+        }
         private static object CreateDelegate(MethodInfo method, Type delegateType)
         {
             try
@@ -88,14 +110,12 @@ namespace blqw.Autofac
                 return method.CreateDelegate(delegateType);
             }
             catch
+            {
 #if DEBUG
-            (Exception e)
-            {
                 throw;
-#else
-            {
-                return null;
 #endif
+                return null;
+
             }
         }
     }
