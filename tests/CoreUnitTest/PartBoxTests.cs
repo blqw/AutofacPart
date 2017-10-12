@@ -73,7 +73,7 @@ namespace CoreUnitTest
             PartContainer.Noop();
             var test = new MyClass { Name = "blqw" };
             var p = test.GetType().GetProperty("Name");
-            var part = PartBox.Get(p, x => new
+            var part = PartBox.Default.Get(p, x => new
             {
                 Get = PartContainer.Invoke<Func<object, object>>("GetValue", x),
                 Set = PartContainer.Invoke<Action<object, object>>("SetValue", x),
@@ -82,7 +82,7 @@ namespace CoreUnitTest
             Assert.NotNull(part.Get);
             Assert.NotNull(part.Set);
 
-            var part2 = PartBox.Get(p, x => new
+            var part2 = PartBox.Default.Get(p, x => new
             {
                 Get = PartContainer.Invoke<Func<object, object>>("GetValue", x),
                 Set = PartContainer.Invoke<Action<object, object>>("SetValue", x),

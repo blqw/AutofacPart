@@ -9,19 +9,20 @@ namespace blqw.Autofac
     /// <summary>
     /// 零件盒子
     /// </summary>
-    public static class PartBox
+    public class PartBox
     {
-        private static readonly ConcurrentDictionary<object, ConcurrentDictionary<Type, object>> _items
+        public static readonly PartBox Default = new PartBox();
+
+        private readonly ConcurrentDictionary<object, ConcurrentDictionary<Type, object>> _items
             = new ConcurrentDictionary<object, ConcurrentDictionary<Type, object>>();
 
-        private static ConcurrentDictionary<Type, object> CreateItem(object key)
+        private ConcurrentDictionary<Type, object> CreateItem(object key)
             => new ConcurrentDictionary<Type, object>();
-
 
         /// <summary>
         /// 获取一个新零件
         /// </summary>
-        public static T Get<T>(object key, Func<T> valueFactory)
+        public T Get<T>(object key, Func<T> valueFactory)
         {
             if (valueFactory == null)
             {
@@ -34,7 +35,7 @@ namespace blqw.Autofac
         /// <summary>
         /// 获取一个新零件
         /// </summary>
-        public static T Get<T>(object key, Func<object, T> valueFactory)
+        public T Get<T>(object key, Func<object, T> valueFactory)
         {
             if (valueFactory == null)
             {
@@ -47,7 +48,7 @@ namespace blqw.Autofac
         /// <summary>
         /// 获取一个新零件
         /// </summary>
-        public static T Get<T, TArg>(object key, Func<TArg, T> valueFactory, TArg arg)
+        public T Get<T, TArg>(object key, Func<TArg, T> valueFactory, TArg arg)
         {
             if (valueFactory == null)
             {
@@ -60,7 +61,7 @@ namespace blqw.Autofac
         /// <summary>
         /// 获取一个新零件
         /// </summary>
-        public static T Get<T, TArg>(object key, Func<object, TArg, T> valueFactory, TArg arg)
+        public T Get<T, TArg>(object key, Func<object, TArg, T> valueFactory, TArg arg)
         {
             if (valueFactory == null)
             {
