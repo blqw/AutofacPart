@@ -192,27 +192,15 @@ namespace blqw.Autofac
         //    {
         //        throw new InvalidOperationException("没有可用的构造函数");
         //    }
-        //    ConstructorInfo ctor = null;
-        //    ParameterInfo[] param = null;
-        //    for (var i = 0; i < ctors.Length; i++)
+        //    foreach (var ctor in ctors)
         //    {
-        //        if (param == null || param.Length == 0)
+        //        var instance = CreateInstance(ctor);
+        //        if (instance != null)
         //        {
-        //            ctor = ctors[i];
-        //            param = ctor.GetParameters();
-        //        }
-        //        else if (ctors[i].GetParameters().Length > 0)
-        //        {
-        //            throw new InvalidOperationException("可用的构造函数过多");
+        //            return instance;
         //        }
         //    }
-        //    if (param.Length == 0)
-        //    {
-        //        var instance = ctor.Invoke(Array.Empty<object>());
-        //        Fill(instance);
-        //        return instance;
-        //    }
-        //    return CreateInstance(ctor);
+        //    return null;
         //}
 
         //public static object CreateInstance(ConstructorInfo ctor)
@@ -229,6 +217,9 @@ namespace blqw.Autofac
         //        Fill(instance);
         //        return instance;
         //    }
+
+
+
         //}
 
         //public static object[] GetArguments(ParameterInfo[] parameters, Func<ParameterInfo, object> defaultFactory = null)
