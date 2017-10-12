@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using Autofac.Core;
+using System.Linq;
 using Autofac.Util;
 using System.Reflection;
 using Autofac;
@@ -66,6 +68,8 @@ namespace blqw.Autofac
 
             _container = builder.Build();
         }
+
+        public static void Noop() { }
 
         /// <summary>
         /// 填充属性和字段
@@ -143,6 +147,39 @@ namespace blqw.Autofac
         /// 获取零件
         /// </summary>
         public static object Get(string contractName, Type contractType) => _container.ResolveNamed(contractName, contractType);
+
+
+        /// <summary>
+        /// 执行零件方法获取返回值
+        /// </summary>
+        public static T Invoke<T>(string contractName, params object[] args)
+        {
+            if (string.IsNullOrWhiteSpace(contractName))
+            {
+                throw new NullReferenceException(nameof(contractName));
+            }
+
+            var method = _container.ResolveNamed<MethodInfo>(contractName);
+            if (method == null)
+            {
+                throw new EntryPointNotFoundException("零件不存在");
+            }
+
+            return (T)method.Invoke(null, args);
+
+        }
+
+
+        /// <summary>
+        /// 执行零件方法获取返回值
+        /// </summary>
+        public static T Invoke<T>(string contractName, IEnumerable<object> args)
+                        => Invoke<T>(contractName, args as object[] ?? args.ToArray());
+
+
+
+
+
 
         //public static object CreateInstance(Type type)
         //{
