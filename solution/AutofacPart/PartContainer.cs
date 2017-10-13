@@ -15,7 +15,7 @@ namespace blqw.Autofac
     /// </summary>
     public static class PartContainer
     {
-        static PartContainer() => Rebuild();
+        static PartContainer() => ServiceProvider = new PartServiceProvider(_container = Build());
 
         /// <summary>
         /// autofac 容器
@@ -26,7 +26,7 @@ namespace blqw.Autofac
         /// 重新编译
         /// </summary>
         /// <remarks> 一般只有在动态加载程序集后才需要调用, 暂不公开 </remarks>
-        private static void Rebuild()
+        public static IContainer Build()
         {
             var builder = new ContainerBuilder();
 
@@ -66,7 +66,7 @@ namespace blqw.Autofac
                 }
             }
 
-            _container = builder.Build();
+            return builder.Build();
         }
 
         public static void Noop() { }
@@ -148,7 +148,6 @@ namespace blqw.Autofac
         /// </summary>
         public static object Get(string contractName, Type contractType) => _container.ResolveNamed(contractName, contractType);
 
-
         /// <summary>
         /// 执行零件方法获取返回值
         /// </summary>
@@ -169,7 +168,6 @@ namespace blqw.Autofac
 
         }
 
-
         /// <summary>
         /// 执行零件方法获取返回值
         /// </summary>
@@ -177,9 +175,8 @@ namespace blqw.Autofac
                         => Invoke<T>(contractName, args as object[] ?? args.ToArray());
 
 
-
-
-
+        public static IServiceProvider ServiceProvider { get; }
+        
 
         //public static object CreateInstance(Type type)
         //{

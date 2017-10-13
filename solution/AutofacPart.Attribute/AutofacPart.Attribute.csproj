@@ -4,6 +4,9 @@
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <AssemblyName>blqw.AutofacPart.Attribute</AssemblyName>
     <RootNamespace>blqw.Autofac</RootNamespace>
+    <Company>blqw</Company>
+    <Authors>blqw</Authors>
+    <Description>Attributes</Description>
   </PropertyGroup>
 
 </Project>

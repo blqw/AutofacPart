@@ -93,6 +93,23 @@ namespace blqw.Autofac
             part = CreateDelegate(value.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value, DelegateType);
             return true;
         }
+
+        public static object CreateDelegate(IContainer container, Type delegateType)
+        {
+            if (container == null)
+            {
+                throw new ArgumentNullException(nameof(container));
+            }
+
+            if (delegateType == null)
+            {
+                throw new ArgumentNullException(nameof(delegateType));
+            }
+
+            var value = container.ResolveOptionalNamed<IEnumerable<Lazy<MethodInfo, ResolveMetadata>>>(delegateType.Name);
+            return CreateDelegate(value.OrderByDescending(x => x.Metadata.Priority).FirstOrDefault().Value, delegateType);
+        }
+
         private static object CreateDelegate(MethodInfo method, Type delegateType)
         {
             try
